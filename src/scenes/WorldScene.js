@@ -10,14 +10,17 @@ import DayClock from '../state/dayClock.js';
 import { rollWeather } from '../state/weather.js';
 import { unlockedCrops } from '../state/crops.js';
 import { visibleRecipes } from '../state/kitchen.js';
-import { itemOrder } from '../data/items.js';
+import FeedSpots from '../state/feedSpots.js';
+import { itemOrder, foodCategory } from '../data/items.js';
 import Cat from '../objects/Cat.js';
 import FarmField from '../objects/FarmField.js';
 import Counter from '../objects/Counter.js';
+import FeedSpot from '../objects/FeedSpot.js';
 import { MIN_TOUCH } from '../ui/button.js';
 import { showDialog } from '../ui/dialog.js';
 import { showStoragePopup } from '../ui/storagePopup.js';
 import { showRecipePopup } from '../ui/recipePopup.js';
+import { showFeedPopup } from '../ui/feedPopup.js';
 import { showTapMarker } from '../ui/tapMarker.js';
 import { showHarvestPop } from '../ui/harvestPop.js';
 
@@ -57,6 +60,8 @@ export default class WorldScene extends Phaser.Scene {
     this.itemOrder = itemOrder(config);
     this.field = new FarmField(this, this.grid, this.farm, config.farm, minTouch);
     this.counter = new Counter(this, this.grid, config.kitchen, minTouch);
+    this.feed = new FeedSpots(config.feedSpots.start);
+    this.feedSpots = this.feed.spots.map((_, i) => new FeedSpot(this, this.grid, config.feedSpots.tiles[i], minTouch));
 
     const { startTileX, startTileY, speedTilesPerSec, workSec } = config.character;
     this.cat = new Cat(this, this.grid, { x: startTileX, y: startTileY }, {
@@ -83,6 +88,11 @@ export default class WorldScene extends Phaser.Scene {
       if (this.sleeping) return;
       if (this.counter.contains(x, y)) {
         this.openRecipes();
+        return;
+      }
+      const spot = this.feedSpots.findIndex((f) => f.contains(x, y));
+      if (spot !== -1) {
+        this.openFeed(spot);
         return;
       }
       const plot = this.field.plotAt(x, y);
@@ -169,6 +179,43 @@ export default class WorldScene extends Phaser.Scene {
       },
     });
     this.counter.render(this.work.countFor(key));
+  }
+
+  // 먹이자리 탭 → 음식 고르기(바꾸기) 또는 내리기. 고르는 순간 창고에서 꺼내 두고, 취소되면 되돌린다
+  openFeed(i) {
+    if (this.popupOpen) return;
+    this.popupOpen = true;
+    showFeedPopup(this.ui, {
+      current: this.feed.get(i),
+      foods: this.inventory.list(this.itemOrder).filter((e) => foodCategory(e.id, config) !== null),
+      onClose: () => (this.popupOpen = false),
+      onPick: (id) => {
+        if (this.inventory.take({ [id]: 1 })) this.queueFeed(i, id);
+      },
+      onRemove: () => this.queueFeed(i, null),
+    });
+  }
+
+  // foodId 를 올리러(null 이면 내리러) 고양이가 먹이자리로 간다. 원래 있던 음식은 창고로
+  queueFeed(i, foodId) {
+    const key = `feed${i}`;
+    const spot = this.feedSpots[i];
+    const render = () => spot.render(this.feed.get(i), this.work.countFor(key));
+    this.work.push({
+      key,
+      standTiles: spot.standTiles(),
+      faceX: spot.center.x,
+      canRun: () => foodId !== null || this.feed.get(i) !== null,
+      run: () => {
+        const prev = this.feed.place(i, foodId);
+        if (prev) this.inventory.add(prev, 1);
+      },
+      onCancel: () => {
+        if (foodId) this.inventory.give({ [foodId]: 1 });
+      },
+      onEnd: render,
+    });
+    render();
   }
 
   // 🌙 잠자기: 한 번 묻고 나서 하루를 끝낸다. 묻는 동안 시계는 멈춘다

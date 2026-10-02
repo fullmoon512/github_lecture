@@ -22,3 +22,9 @@ export function itemName(id) {
 export function itemOrder(config) {
   return [...Object.keys(config.crops), ...Object.keys(config.cooking.recipes), ...config.gifts.items];
 }
+
+// 음식 분류: 작물 그대로는 'raw'(생채소), 요리는 레시피의 분류. 음식이 아니면(동물 선물 등) null
+export function foodCategory(id, config) {
+  if (config.crops[id]) return 'raw';
+  return config.cooking.recipes[id]?.category ?? null;
+}

@@ -110,6 +110,8 @@
   },
 
   "feedSpots": {
+    "_note": "tiles: 먹이자리 자리(타일 x, y). 앞에서부터 start 개가 열려 있고, levels 로 늘어난다. 위치는 초안",
+    "tiles": [[13, 6], [15, 6], [17, 6]],
     "start": 1,
     "levels": [
       { "spots": 2, "cost": { "carrot": 8 } },

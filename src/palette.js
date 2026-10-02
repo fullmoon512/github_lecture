@@ -38,6 +38,8 @@ export const PALETTE = {
   pot: 0x6b6f7a,
   potLid: 0x8a8f99,
   steam: 0xffffff,
+  tray: 0xd8b07a,
+  trayRim: 0xa8783f,
   mutedText: '#9a8676',
   popText: '#fff4e0',
   popStroke: '#6b5446',
