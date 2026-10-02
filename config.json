@@ -25,7 +25,17 @@
     "_note": "초안. 시작 위치는 타일 좌표, 속도는 초당 타일 수",
     "startTileX": 20,
     "startTileY": 11,
-    "speedTilesPerSec": 4
+    "speedTilesPerSec": 4,
+    "workSec": 0.6
+  },
+
+  "farm": {
+    "_note": "초안. 밭 한 칸 = plotTiles×plotTiles 타일, 칸 사이 길 gapTiles. 시작 칸 수는 game.startPlots",
+    "originTileX": 6,
+    "originTileY": 6,
+    "plotTiles": 2,
+    "gapTiles": 1,
+    "cols": 2
   },
 
   "time": {
@@ -52,6 +62,11 @@
   "growth": {
     "needsWaterToGrow": true,
     "witherWhenUnwatered": false
+  },
+
+  "harvest": {
+    "_note": "수확 후 밭은 빈 밭으로 돌아간다 (씨앗 무료, 다시 심기)",
+    "yield": 1
   },
 
   "foodCategories": ["raw", "juice", "tea", "jam"],
