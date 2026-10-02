@@ -16,6 +16,7 @@ import Cat from '../objects/Cat.js';
 import FarmField from '../objects/FarmField.js';
 import Counter from '../objects/Counter.js';
 import FeedSpot from '../objects/FeedSpot.js';
+import Sky from '../objects/Sky.js';
 import { MIN_TOUCH } from '../ui/button.js';
 import { showDialog } from '../ui/dialog.js';
 import { showStoragePopup } from '../ui/storagePopup.js';
@@ -83,6 +84,10 @@ export default class WorldScene extends Phaser.Scene {
     this.worldBiggerThanView = worldW > viewW || worldH > viewH;
 
     enableCameraDrag(this, { thresholdPx: config.camera.dragThresholdPx });
+
+    // 시간대 색·날씨 효과 (월드에만)
+    this.sky = new Sky(this, config);
+    this.sky.setWeather(this.weather);
 
     this.events.on(WORLD_TAP, ({ x, y }) => {
       if (this.sleeping) return;
@@ -259,6 +264,7 @@ export default class WorldScene extends Phaser.Scene {
     this.clock.nextDay();
     this.weather = rollWeather(config.weather);
     if (this.weather === 'rain' && config.weather.rainAutoWater) this.farm.waterAll();
+    this.sky.setWeather(this.weather);
     this.renderPlots();
     this.ui.topBar.update(this.clock.day, this.weather);
 
@@ -276,6 +282,7 @@ export default class WorldScene extends Phaser.Scene {
     // 밤이 끝나면 자동으로 하루 끝 (묻지 않음)
     const paused = this.sleeping || this.popupOpen;
     if (!paused && this.clock.tick(delta / 1000)) this.endDay();
+    this.sky.update(this.clock.elapsedSec, delta);
   }
 
   // 빈 땅(임시 도형): 체크무늬 잔디 + 맵 외곽 한 줄. 한 장의 텍스처로 구워 둔다.

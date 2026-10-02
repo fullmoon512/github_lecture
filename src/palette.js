@@ -25,6 +25,16 @@ export const PALETTE = {
   cloudLine: 0x9a93ab,
   rain: 0x7fb3e0,
   night: 0x2e2a4a,
+  // 시간대 색: 월드에 곱하기로 물들인다 (흰색 = 변화 없음)
+  tint: {
+    morning: 0xffe7a8,
+    day: 0xffffff,
+    evening: 0xff9050,
+    night: 0x5a4ea8,
+  },
+  cloudyTint: 0x8a8f99,
+  rainTint: 0x5f7390,
+  raindrop: 0xd6e4f5,
   slotFill: 0xf6e8cf,
   slotLine: 0xd9c4a3,
   itemFallback: 0xb9b2c4,
