@@ -9,12 +9,12 @@
   },
 
   "world": {
-    "_note": "초안. zoom = 월드 확대 배율(정수 권장, UI 는 그대로). 지금은 화면 한 장 크기(20×11 타일 × 2배). 맵 확장 시 키운다. homeX/Y 는 '처음 위치' 카메라 중심(월드 px)",
-    "zoom": 2,
-    "widthTiles": 20,
-    "heightTiles": 11,
-    "homeX": 160,
-    "homeY": 88
+    "_note": "초안. zoom = 월드 확대 배율(정수 권장, UI 는 그대로). 지금은 1배, 화면 한 장 크기(40×22 타일). 맵 확장 시 키운다. homeX/Y 는 '처음 위치' 카메라 중심(월드 px)",
+    "zoom": 1,
+    "widthTiles": 40,
+    "heightTiles": 22,
+    "homeX": 320,
+    "homeY": 180
   },
 
   "camera": {
@@ -24,16 +24,16 @@
 
   "character": {
     "_note": "초안. 시작 위치는 타일 좌표, 속도는 초당 타일 수",
-    "startTileX": 10,
-    "startTileY": 7,
+    "startTileX": 20,
+    "startTileY": 11,
     "speedTilesPerSec": 4,
     "workSec": 0.6
   },
 
   "farm": {
     "_note": "초안. 밭 한 칸 = plotTiles×plotTiles 타일, 칸 사이 길 gapTiles. 시작 칸 수는 game.startPlots",
-    "originTileX": 2,
-    "originTileY": 3,
+    "originTileX": 6,
+    "originTileY": 6,
     "plotTiles": 2,
     "gapTiles": 1,
     "cols": 2
@@ -41,8 +41,8 @@
 
   "kitchen": {
     "_note": "초안. 조리대 위치(타일). 집이 생기면 집 옆으로 옮긴다",
-    "counterTileX": 9,
-    "counterTileY": 4,
+    "counterTileX": 14,
+    "counterTileY": 7,
     "widthTiles": 2
   },
 
@@ -111,7 +111,7 @@
 
   "feedSpots": {
     "_note": "tiles: 먹이자리 자리(타일 x, y). 앞에서부터 start 개가 열려 있고, levels 로 늘어난다. 위치는 초안",
-    "tiles": [[13, 6], [15, 6], [17, 6]],
+    "tiles": [[19, 8], [21, 8], [23, 8]],
     "start": 1,
     "levels": [
       { "spots": 2, "cost": { "carrot": 8 } },
