@@ -5,15 +5,17 @@ import { PALETTE } from './palette.js';
 
 const { width, height } = config.game;
 
-// 창에 들어가는 가장 큰 정수배. 640×360 보다 작은 창에서만 1배 미만으로 축소
+const parent = document.getElementById('game');
+
+// 게임 영역(#game)에 들어가는 가장 큰 정수배. 640×360 보다 작을 때만 1배 미만으로 축소
 function fitZoom() {
-  const fit = Math.min(window.innerWidth / width, window.innerHeight / height);
+  const fit = Math.min(parent.clientWidth / width, parent.clientHeight / height);
   return fit >= 1 ? Math.floor(fit) : fit;
 }
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
-  parent: 'game',
+  parent,
   width,
   height,
   pixelArt: true,
