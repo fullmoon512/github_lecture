@@ -7,7 +7,10 @@ export function enableCameraDrag(scene, { thresholdPx }) {
   let active = null; // { pointerId, startX, startY, scrollX, scrollY, dragging }
 
   scene.input.on('pointerdown', (pointer, over) => {
-    // UI(버튼 등) 위에서 시작한 입력과 두 번째 손가락은 무시
+    // 손을 뗀 이벤트를 위쪽 UI 장면이 가져가 끝나지 못한 드래그는 버린다
+    // (같은 포인터로 다시 눌렀거나, 그 포인터가 이미 떨어져 있으면)
+    if (active && (active.pointerId === pointer.id || !isPointerDown(scene, active.pointerId))) active = null;
+    // 두 번째 손가락, 월드 안 버튼 위에서 시작한 입력은 무시
     if (active || over.length > 0) return;
     active = {
       pointerId: pointer.id,
@@ -44,4 +47,8 @@ export function enableCameraDrag(scene, { thresholdPx }) {
   };
   scene.input.on('pointerup', (pointer) => end(pointer, true));
   scene.input.on('pointerupoutside', (pointer) => end(pointer, false));
+}
+
+function isPointerDown(scene, id) {
+  return scene.input.manager.pointers.some((p) => p.id === id && p.isDown);
 }

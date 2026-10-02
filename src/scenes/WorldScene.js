@@ -14,16 +14,15 @@ import { itemOrder } from '../data/items.js';
 import Cat from '../objects/Cat.js';
 import FarmField from '../objects/FarmField.js';
 import Counter from '../objects/Counter.js';
-import { UI_DEPTH } from '../ui/button.js';
+import { MIN_TOUCH } from '../ui/button.js';
 import { showDialog } from '../ui/dialog.js';
-import TopBar from '../ui/topBar.js';
 import { showStoragePopup } from '../ui/storagePopup.js';
 import { showRecipePopup } from '../ui/recipePopup.js';
-import { createHomeButton } from '../ui/homeButton.js';
 import { showTapMarker } from '../ui/tapMarker.js';
 import { showHarvestPop } from '../ui/harvestPop.js';
-import SeedBar from '../ui/seedBar.js';
 
+// 월드(땅·밭·조리대·고양이)와 게임 진행. 카메라는 config.world.zoom 배로 확대된다.
+// 버튼·창은 UIScene(this.ui)에 그린다
 export default class WorldScene extends Phaser.Scene {
   constructor() {
     super('World');
@@ -31,7 +30,8 @@ export default class WorldScene extends Phaser.Scene {
 
   create() {
     const { tileSize } = config.game;
-    const { widthTiles, heightTiles, homeX, homeY } = config.world;
+    const { widthTiles, heightTiles, homeX, homeY, zoom } = config.world;
+    const minTouch = MIN_TOUCH / zoom; // 화면 44px 를 월드 px 로
     const worldW = widthTiles * tileSize;
     const worldH = heightTiles * tileSize;
 
@@ -55,8 +55,8 @@ export default class WorldScene extends Phaser.Scene {
     this.farm = new Farm(config, config.game.startPlots);
     this.inventory = new Inventory();
     this.itemOrder = itemOrder(config);
-    this.field = new FarmField(this, this.grid, this.farm, config.farm);
-    this.counter = new Counter(this, this.grid, config.kitchen);
+    this.field = new FarmField(this, this.grid, this.farm, config.farm, minTouch);
+    this.counter = new Counter(this, this.grid, config.kitchen, minTouch);
 
     const { startTileX, startTileY, speedTilesPerSec, workSec } = config.character;
     this.cat = new Cat(this, this.grid, { x: startTileX, y: startTileY }, {
@@ -65,33 +65,19 @@ export default class WorldScene extends Phaser.Scene {
     });
     this.work = new WorkQueue(this.cat);
 
-    // 맵이 화면보다 작으면 남는 줄은 위쪽(상단바 자리)으로, 울타리 색으로 채운다
+    // 월드 카메라 확대. 맵이 화면보다 작으면 남는 줄은 위쪽(상단바 자리)으로, 울타리 색으로 채운다
     const cam = this.cameras.main;
-    const boundW = Math.max(worldW, cam.width);
-    const boundH = Math.max(worldH, cam.height);
+    cam.setZoom(zoom);
+    const viewW = cam.width / zoom;
+    const viewH = cam.height / zoom;
+    const boundW = Math.max(worldW, viewW);
+    const boundH = Math.max(worldH, viewH);
     cam.setBounds(worldW - boundW, worldH - boundH, boundW, boundH);
     cam.setBackgroundColor(PALETTE.worldEdge);
     cam.centerOn(homeX, homeY);
+    this.worldBiggerThanView = worldW > viewW || worldH > viewH;
 
-    // 드래그·🏠 는 맵이 화면보다 클 때(맵 확장 후) 의미가 있다
     enableCameraDrag(this, { thresholdPx: config.camera.dragThresholdPx });
-    if (worldW > cam.width || worldH > cam.height) {
-      createHomeButton(this, { homeX, homeY, panMs: config.camera.homePanMs });
-    }
-    this.seedBar = new SeedBar(this, unlockedCrops(config.crops));
-    this.topBar = new TopBar(this, {
-      onStorage: () => this.openStorage(),
-      onSleep: () => this.askSleep(),
-    });
-    this.topBar.update(this.clock.day, this.weather);
-
-    // 하루가 끝날 때 화면을 덮는 밤빛 (대화창 바로 아래)
-    this.nightShade = this.add
-      .rectangle(0, 0, cam.width, cam.height, PALETTE.night)
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setDepth(UI_DEPTH + 50)
-      .setAlpha(0);
 
     this.events.on(WORLD_TAP, ({ x, y }) => {
       if (this.sleeping) return;
@@ -115,7 +101,7 @@ export default class WorldScene extends Phaser.Scene {
 
   // 밭 칸 탭 → 작업 예약. 이 칸에서 앞으로 할 수 있는 행동 수만큼만 쌓인다
   queuePlotWork(i) {
-    const seed = this.seedBar.selected;
+    const seed = this.ui.seedBar.selected;
     if (this.work.countFor(i) >= this.farm.plannedActions(i, seed).length) return;
 
     this.work.push({
@@ -143,7 +129,7 @@ export default class WorldScene extends Phaser.Scene {
   openStorage() {
     if (this.sleeping || this.popupOpen) return;
     this.popupOpen = true;
-    showStoragePopup(this, {
+    showStoragePopup(this.ui, {
       entries: this.inventory.list(this.itemOrder),
       onClose: () => (this.popupOpen = false),
     });
@@ -153,7 +139,7 @@ export default class WorldScene extends Phaser.Scene {
   openRecipes() {
     if (this.popupOpen) return;
     this.popupOpen = true;
-    showRecipePopup(this, {
+    showRecipePopup(this.ui, {
       recipes: visibleRecipes(config.cooking.recipes, unlockedCrops(config.crops)),
       inventory: this.inventory,
       onClose: () => (this.popupOpen = false),
@@ -189,7 +175,7 @@ export default class WorldScene extends Phaser.Scene {
   askSleep() {
     if (this.sleeping) return;
     this.sleeping = true;
-    showDialog(this, {
+    showDialog(this.ui, {
       title: '오늘은 이만 잘까요?',
       buttons: [
         { label: '조금 더', onTap: () => (this.sleeping = false) },
@@ -207,13 +193,13 @@ export default class WorldScene extends Phaser.Scene {
 
     const day = this.clock.day;
     this.tweens.add({
-      targets: this.nightShade,
+      targets: this.ui.nightShade,
       alpha: 0.75,
       duration: 700,
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.renderPlots();
-        showDialog(this, {
+        showDialog(this.ui, {
           title: `${day}일째가 저물었어요`,
           body: '오늘 하루도 수고했어요.',
           buttons: [{ label: '잘 자요', onTap: () => this.startMorning() }],
@@ -227,10 +213,10 @@ export default class WorldScene extends Phaser.Scene {
     this.weather = rollWeather(config.weather);
     if (this.weather === 'rain' && config.weather.rainAutoWater) this.farm.waterAll();
     this.renderPlots();
-    this.topBar.update(this.clock.day, this.weather);
+    this.ui.topBar.update(this.clock.day, this.weather);
 
     this.tweens.add({
-      targets: this.nightShade,
+      targets: this.ui.nightShade,
       alpha: 0,
       duration: 700,
       ease: 'Sine.easeInOut',

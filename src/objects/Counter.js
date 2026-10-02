@@ -1,10 +1,9 @@
 import { PALETTE } from '../palette.js';
-import { MIN_TOUCH } from '../ui/button.js';
 import { sideTiles } from '../systems/walkGrid.js';
 
 // 조리대 (임시 도형): 나무 탁자 위 냄비 + 도마. 걸을 수 없는 칸이고, 고양이는 옆에 서서 요리한다
 export default class Counter {
-  constructor(scene, grid, { counterTileX, counterTileY, widthTiles }) {
+  constructor(scene, grid, { counterTileX, counterTileY, widthTiles }, minTouch) {
     this.scene = scene;
     this.tx = counterTileX;
     this.ty = counterTileY;
@@ -18,8 +17,8 @@ export default class Counter {
     this.ph = t;
     this.center = { x: this.px + this.pw / 2, y: this.py + this.ph / 2 };
     this.potX = this.px + 9;
-    this.hitHalfW = Math.max(MIN_TOUCH, this.pw) / 2;
-    this.hitHalfH = Math.max(MIN_TOUCH, this.ph) / 2;
+    this.hitHalfW = Math.max(minTouch, this.pw) / 2;
+    this.hitHalfH = Math.max(minTouch, this.ph) / 2;
 
     // 깊이 = 아래쪽 끝: 아래에 선 고양이는 앞에, 위에 선 고양이는 뒤에 보인다
     this.g = scene.add.graphics().setDepth(this.py + this.ph);

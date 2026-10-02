@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import config from '../config.json';
 import WorldScene from './scenes/WorldScene.js';
+import UIScene from './scenes/UIScene.js';
 import { PALETTE } from './palette.js';
 
 const { width, height } = config.game;
@@ -25,7 +26,7 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.NONE,
     zoom: fitZoom(),
   },
-  scene: [WorldScene],
+  scene: [WorldScene, UIScene], // 뒤에 올수록 위에 그려진다
 });
 
 window.addEventListener('resize', () => game.scale.setZoom(fitZoom()));

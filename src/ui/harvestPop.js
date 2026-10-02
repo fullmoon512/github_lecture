@@ -5,15 +5,15 @@ import { drawItemIcon } from './itemIcon.js';
 // 수확·요리한 자리 위로 아이콘 + "+1" 이 잠깐 떠올랐다 사라진다
 export function showHarvestPop(scene, x, y, amount, itemId) {
   const icon = scene.add.graphics();
-  drawItemIcon(icon, -8, 0, itemId);
+  drawItemIcon(icon, -6, 0, itemId);
   const text = scene.add
-    .text(6, 0, `+${amount}`, {
+    .text(4, 0, `+${amount}`, {
       fontFamily: 'sans-serif',
-      fontSize: '11px',
+      fontSize: '8px',
       fontStyle: 'bold',
       color: PALETTE.popText,
       stroke: PALETTE.popStroke,
-      strokeThickness: 3,
+      strokeThickness: 2,
     })
     .setOrigin(0, 0.5);
   const pop = scene.add.container(x, y, [icon, text]).setDepth(UI_DEPTH - 1);

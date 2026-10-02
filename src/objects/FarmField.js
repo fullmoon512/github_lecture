@@ -1,5 +1,4 @@
 import { PALETTE } from '../palette.js';
-import { MIN_TOUCH } from '../ui/button.js';
 import { drawCrop } from './cropLook.js';
 import { sideTiles } from '../systems/walkGrid.js';
 
@@ -7,7 +6,8 @@ const PLOT_DEPTH = 1; // 땅 바로 위. 고양이(깊이 = y)는 항상 그 위
 
 // 텃밭 칸들의 위치·모양. 밭 칸은 걸을 수 없는 칸으로 막고, 고양이는 옆 칸에 서서 작업한다
 export default class FarmField {
-  constructor(scene, grid, farm, { originTileX, originTileY, plotTiles, gapTiles, cols }) {
+  // minTouch: 화면 44px 를 월드 px 로 바꾼 값 (월드가 확대되므로)
+  constructor(scene, grid, farm, { originTileX, originTileY, plotTiles, gapTiles, cols }, minTouch) {
     this.grid = grid;
     this.farm = farm;
     this.size = plotTiles;
@@ -31,11 +31,11 @@ export default class FarmField {
         g: scene.add.graphics().setDepth(PLOT_DEPTH),
       };
     });
-    this.hitHalf = Math.max(MIN_TOUCH, plotTiles * t) / 2;
+    this.hitHalf = Math.max(minTouch, plotTiles * t) / 2;
     this.plots.forEach((_, i) => this.render(i, 0));
   }
 
-  // 월드 좌표가 가리키는 밭 칸 번호 (없으면 -1). 터치 영역은 최소 44px
+  // 월드 좌표가 가리키는 밭 칸 번호 (없으면 -1). 터치 영역은 화면에서 최소 44px
   plotAt(wx, wy) {
     let best = -1;
     let bestD = Infinity;
