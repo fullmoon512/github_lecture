@@ -9,9 +9,9 @@
   },
 
   "world": {
-    "_note": "초안. 집·텃밭·쉼터 배치 후 조정. homeX/Y 는 '처음 위치' 카메라 중심(px)",
-    "widthTiles": 80,
-    "heightTiles": 46,
+    "_note": "초안. 지금은 화면 한 장 크기(640×352 + 위아래 여백). 맵 확장 시 키운다. homeX/Y 는 '처음 위치' 카메라 중심(px)",
+    "widthTiles": 40,
+    "heightTiles": 22,
     "homeX": 320,
     "homeY": 180
   },

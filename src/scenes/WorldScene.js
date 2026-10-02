@@ -50,12 +50,19 @@ export default class WorldScene extends Phaser.Scene {
     });
     this.work = new WorkQueue(this.cat);
 
+    // 맵이 화면보다 작으면 남는 줄은 위쪽(상단바 자리)으로, 울타리 색으로 채운다
     const cam = this.cameras.main;
-    cam.setBounds(0, 0, worldW, worldH);
+    const boundW = Math.max(worldW, cam.width);
+    const boundH = Math.max(worldH, cam.height);
+    cam.setBounds(worldW - boundW, worldH - boundH, boundW, boundH);
+    cam.setBackgroundColor(PALETTE.worldEdge);
     cam.centerOn(homeX, homeY);
 
+    // 드래그·🏠 는 맵이 화면보다 클 때(맵 확장 후) 의미가 있다
     enableCameraDrag(this, { thresholdPx: config.camera.dragThresholdPx });
-    createHomeButton(this, { homeX, homeY, panMs: config.camera.homePanMs });
+    if (worldW > cam.width || worldH > cam.height) {
+      createHomeButton(this, { homeX, homeY, panMs: config.camera.homePanMs });
+    }
     this.seedBar = new SeedBar(this, unlockedCrops(config.crops));
     if (import.meta.env.DEV) this.addDevDayButton();
 
