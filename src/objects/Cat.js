@@ -85,8 +85,8 @@ export default class Cat extends Phaser.GameObjects.Container {
     this.look.setY(0).setScale(this.look.scaleX, 1);
   }
 
-  // faceX 쪽을 보고 작업 모션(콕콕) 후 onDone
-  work(faceX, onDone) {
+  // faceX 쪽을 보고 작업 모션(콕콕) 후 onDone. ms 를 안 주면 기본 작업 시간
+  work(faceX, onDone, ms = this.workMs) {
     this.stop();
     if (faceX !== this.x) this.look.scaleX = faceX < this.x ? -1 : 1;
     this.workTween = this.scene.tweens.add({
@@ -97,7 +97,7 @@ export default class Cat extends Phaser.GameObjects.Container {
       yoyo: true,
       repeat: -1,
     });
-    this.workTimer = this.scene.time.delayedCall(this.workMs, () => {
+    this.workTimer = this.scene.time.delayedCall(ms, () => {
       this.stop();
       onDone();
     });

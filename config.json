@@ -38,6 +38,13 @@
     "cols": 2
   },
 
+  "kitchen": {
+    "_note": "초안. 조리대 위치(타일). 집이 생기면 집 옆으로 옮긴다",
+    "counterTileX": 14,
+    "counterTileY": 7,
+    "widthTiles": 2
+  },
+
   "time": {
     "_note": "초 단위. 합계 540초 = 9분. 시계는 연출 전용이며 성장과 무관",
     "dayLengthSec": 540,

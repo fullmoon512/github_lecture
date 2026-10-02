@@ -1,10 +1,13 @@
 import { PALETTE } from '../palette.js';
 import { UI_DEPTH } from './button.js';
+import { drawItemIcon } from './itemIcon.js';
 
-// 수확한 칸 위로 "+1" 이 잠깐 떠올랐다 사라진다
-export function showHarvestPop(scene, x, y, amount) {
+// 수확·요리한 자리 위로 아이콘 + "+1" 이 잠깐 떠올랐다 사라진다
+export function showHarvestPop(scene, x, y, amount, itemId) {
+  const icon = scene.add.graphics();
+  drawItemIcon(icon, -8, 0, itemId);
   const text = scene.add
-    .text(x, y, `+${amount}`, {
+    .text(6, 0, `+${amount}`, {
       fontFamily: 'sans-serif',
       fontSize: '11px',
       fontStyle: 'bold',
@@ -12,14 +15,14 @@ export function showHarvestPop(scene, x, y, amount) {
       stroke: PALETTE.popStroke,
       strokeThickness: 3,
     })
-    .setOrigin(0.5)
-    .setDepth(UI_DEPTH - 1);
+    .setOrigin(0, 0.5);
+  const pop = scene.add.container(x, y, [icon, text]).setDepth(UI_DEPTH - 1);
   scene.tweens.add({
-    targets: text,
+    targets: pop,
     y: y - 14,
     alpha: 0,
-    duration: 900,
+    duration: 1100,
     ease: 'Sine.easeOut',
-    onComplete: () => text.destroy(),
+    onComplete: () => pop.destroy(),
   });
 }

@@ -1,6 +1,7 @@
 import { PALETTE } from '../palette.js';
 import { MIN_TOUCH } from '../ui/button.js';
 import { drawCrop } from './cropLook.js';
+import { sideTiles } from '../systems/walkGrid.js';
 
 const PLOT_DEPTH = 1; // 땅 바로 위. 고양이(깊이 = y)는 항상 그 위
 
@@ -58,13 +59,7 @@ export default class FarmField {
   // 작업할 때 설 수 있는 칸: 밭의 네 변에 붙은 타일
   standTiles(i) {
     const { tx, ty } = this.plots[i];
-    const n = this.size;
-    const tiles = [];
-    for (let k = 0; k < n; k++) {
-      tiles.push({ x: tx - 1, y: ty + k }, { x: tx + n, y: ty + k });
-      tiles.push({ x: tx + k, y: ty - 1 }, { x: tx + k, y: ty + n });
-    }
-    return tiles;
+    return sideTiles(tx, ty, this.size, this.size);
   }
 
   render(i, queuedCount) {

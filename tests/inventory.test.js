@@ -33,3 +33,19 @@ test('순서표에 없는 품목은 맨 뒤', () => {
   inv.add('carrot', 1);
   assert.deepEqual(inv.list(order).map((e) => e.id), ['carrot', 'mystery']);
 });
+
+test('재료 꺼내기: 모두 있을 때만 한꺼번에, 되돌리기', () => {
+  const inv = new Inventory();
+  inv.add('carrot', 3);
+  assert.equal(inv.has({ carrot: 2 }), true);
+  assert.equal(inv.take({ carrot: 2, herb: 1 }), false, '하나라도 모자라면 아무것도 안 꺼냄');
+  assert.equal(inv.count('carrot'), 3);
+  assert.equal(inv.take({ carrot: 2 }), true);
+  assert.equal(inv.count('carrot'), 1);
+  assert.equal(inv.take({ carrot: 2 }), false);
+  inv.give({ carrot: 2 });
+  assert.equal(inv.count('carrot'), 3);
+  assert.deepEqual(inv.list(['carrot']), [{ id: 'carrot', count: 3 }]);
+  inv.take({ carrot: 3 });
+  assert.deepEqual(inv.list(['carrot']), [], '0개가 되면 창고 목록에서 빠짐');
+});

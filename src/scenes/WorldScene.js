@@ -9,13 +9,16 @@ import Inventory from '../state/inventory.js';
 import DayClock from '../state/dayClock.js';
 import { rollWeather } from '../state/weather.js';
 import { unlockedCrops } from '../state/crops.js';
+import { visibleRecipes } from '../state/kitchen.js';
 import { itemOrder } from '../data/items.js';
 import Cat from '../objects/Cat.js';
 import FarmField from '../objects/FarmField.js';
+import Counter from '../objects/Counter.js';
 import { UI_DEPTH } from '../ui/button.js';
 import { showDialog } from '../ui/dialog.js';
 import TopBar from '../ui/topBar.js';
 import { showStoragePopup } from '../ui/storagePopup.js';
+import { showRecipePopup } from '../ui/recipePopup.js';
 import { createHomeButton } from '../ui/homeButton.js';
 import { showTapMarker } from '../ui/tapMarker.js';
 import { showHarvestPop } from '../ui/harvestPop.js';
@@ -48,11 +51,12 @@ export default class WorldScene extends Phaser.Scene {
     this.clock = new DayClock(config.time);
     this.weather = config.weather.firstDay;
     this.sleeping = false; // 하루가 끝나 정산 중이거나 잠자기 확인 중이면 시계가 멈춘다
-    this.storageOpen = false; // 창고를 보는 동안에도 시계가 멈춘다 (고양이는 하던 일 계속)
+    this.popupOpen = false; // 창고·조리대 창을 보는 동안에도 시계가 멈춘다 (고양이는 하던 일 계속)
     this.farm = new Farm(config, config.game.startPlots);
     this.inventory = new Inventory();
     this.itemOrder = itemOrder(config);
     this.field = new FarmField(this, this.grid, this.farm, config.farm);
+    this.counter = new Counter(this, this.grid, config.kitchen);
 
     const { startTileX, startTileY, speedTilesPerSec, workSec } = config.character;
     this.cat = new Cat(this, this.grid, { x: startTileX, y: startTileY }, {
@@ -91,6 +95,10 @@ export default class WorldScene extends Phaser.Scene {
 
     this.events.on(WORLD_TAP, ({ x, y }) => {
       if (this.sleeping) return;
+      if (this.counter.contains(x, y)) {
+        this.openRecipes();
+        return;
+      }
       const plot = this.field.plotAt(x, y);
       if (plot !== -1) {
         this.queuePlotWork(plot);
@@ -120,7 +128,7 @@ export default class WorldScene extends Phaser.Scene {
         if (harvested) {
           this.inventory.add(harvested.crop, harvested.amount);
           const c = this.field.center(i);
-          showHarvestPop(this, c.x, c.y - 10, harvested.amount);
+          showHarvestPop(this, c.x, c.y - 10, harvested.amount, harvested.crop);
         }
       },
       onEnd: () => this.field.render(i, this.work.countFor(i)),
@@ -133,12 +141,48 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   openStorage() {
-    if (this.sleeping || this.storageOpen) return;
-    this.storageOpen = true;
+    if (this.sleeping || this.popupOpen) return;
+    this.popupOpen = true;
     showStoragePopup(this, {
       entries: this.inventory.list(this.itemOrder),
-      onClose: () => (this.storageOpen = false),
+      onClose: () => (this.popupOpen = false),
     });
+  }
+
+  // 조리대 탭 → 요리 고르기. 고르는 순간 재료를 꺼내 두고, 요리가 취소되면 되돌린다
+  openRecipes() {
+    if (this.popupOpen) return;
+    this.popupOpen = true;
+    showRecipePopup(this, {
+      recipes: visibleRecipes(config.cooking.recipes, unlockedCrops(config.crops)),
+      inventory: this.inventory,
+      onClose: () => (this.popupOpen = false),
+      onPick: (recipe) => {
+        if (this.inventory.take(recipe.inputs)) this.queueCook(recipe);
+      },
+    });
+  }
+
+  queueCook(recipe) {
+    const key = 'counter';
+    this.work.push({
+      key,
+      standTiles: this.counter.standTiles(),
+      faceX: this.counter.center.x,
+      workMs: config.cooking.craftTimeSec * 1000,
+      canRun: () => true,
+      onWorkStart: () => this.counter.startSteam(),
+      run: () => {
+        this.inventory.add(recipe.id, 1);
+        showHarvestPop(this, this.counter.center.x, this.counter.py - 10, 1, recipe.id);
+      },
+      onCancel: () => this.inventory.give(recipe.inputs),
+      onEnd: () => {
+        this.counter.stopSteam();
+        this.counter.render(this.work.countFor(key));
+      },
+    });
+    this.counter.render(this.work.countFor(key));
   }
 
   // 🌙 잠자기: 한 번 묻고 나서 하루를 끝낸다. 묻는 동안 시계는 멈춘다
@@ -197,7 +241,7 @@ export default class WorldScene extends Phaser.Scene {
   update(_time, delta) {
     this.cat.update(delta);
     // 밤이 끝나면 자동으로 하루 끝 (묻지 않음)
-    const paused = this.sleeping || this.storageOpen;
+    const paused = this.sleeping || this.popupOpen;
     if (!paused && this.clock.tick(delta / 1000)) this.endDay();
   }
 
