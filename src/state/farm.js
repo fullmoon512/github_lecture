@@ -48,6 +48,13 @@ export default class Farm {
     return harvested;
   }
 
+  // 비 오는 날 아침: 심어 둔 칸(다 자란 칸 제외)에 모두 물
+  waterAll() {
+    this.plots.forEach((p) => {
+      if (p.crop !== null && !this.ready(p)) p.watered = true;
+    });
+  }
+
   // 하루가 끝날 때: 물 준 칸만 +1 (needsWaterToGrow 가 false 면 심은 칸 모두). 시들지 않는다
   advanceDay() {
     for (let i = 0; i < this.plots.length; i++) {

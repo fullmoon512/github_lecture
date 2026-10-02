@@ -20,6 +20,11 @@ export const PALETTE = {
   leaf: 0x5e9e4f,
   queued: 0xfff4e0,
   selected: 0x5f8a57,
+  sun: 0xf6c85f,
+  cloud: 0xcdc7da,
+  cloudLine: 0x9a93ab,
+  rain: 0x7fb3e0,
+  night: 0x2e2a4a,
   popText: '#fff4e0',
   popStroke: '#6b5446',
   crop: {

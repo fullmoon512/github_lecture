@@ -48,7 +48,8 @@
     "sunny": 0.7,
     "cloudy": 0.2,
     "rain": 0.1,
-    "rainAutoWater": true
+    "rainAutoWater": true,
+    "firstDay": "sunny"
   },
 
   "crops": {

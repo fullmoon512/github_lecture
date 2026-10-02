@@ -6,10 +6,14 @@ import WorkQueue from '../systems/workQueue.js';
 import { enableCameraDrag, WORLD_TAP } from '../systems/cameraDrag.js';
 import Farm from '../state/farm.js';
 import Inventory from '../state/inventory.js';
+import DayClock from '../state/dayClock.js';
+import { rollWeather } from '../state/weather.js';
 import { unlockedCrops } from '../state/crops.js';
 import Cat from '../objects/Cat.js';
 import FarmField from '../objects/FarmField.js';
-import { createButton, MIN_TOUCH } from '../ui/button.js';
+import { UI_DEPTH } from '../ui/button.js';
+import { showDialog } from '../ui/dialog.js';
+import TopBar from '../ui/topBar.js';
 import { createHomeButton } from '../ui/homeButton.js';
 import { showTapMarker } from '../ui/tapMarker.js';
 import { showHarvestPop } from '../ui/harvestPop.js';
@@ -39,6 +43,9 @@ export default class WorldScene extends Phaser.Scene {
       this.grid.setBlocked(widthTiles - 1, y);
     }
 
+    this.clock = new DayClock(config.time);
+    this.weather = config.weather.firstDay;
+    this.sleeping = false; // 하루가 끝나 정산 중이거나 잠자기 확인 중이면 시계가 멈춘다
     this.farm = new Farm(config, config.game.startPlots);
     this.inventory = new Inventory();
     this.field = new FarmField(this, this.grid, this.farm, config.farm);
@@ -64,9 +71,19 @@ export default class WorldScene extends Phaser.Scene {
       createHomeButton(this, { homeX, homeY, panMs: config.camera.homePanMs });
     }
     this.seedBar = new SeedBar(this, unlockedCrops(config.crops));
-    if (import.meta.env.DEV) this.addDevDayButton();
+    this.topBar = new TopBar(this, { onSleep: () => this.askSleep() });
+    this.topBar.update(this.clock.day, this.weather);
+
+    // 하루가 끝날 때 화면을 덮는 밤빛 (대화창 바로 아래)
+    this.nightShade = this.add
+      .rectangle(0, 0, cam.width, cam.height, PALETTE.night)
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(UI_DEPTH + 50)
+      .setAlpha(0);
 
     this.events.on(WORLD_TAP, ({ x, y }) => {
+      if (this.sleeping) return;
       const plot = this.field.plotAt(x, y);
       if (plot !== -1) {
         this.queuePlotWork(plot);
@@ -104,20 +121,67 @@ export default class WorldScene extends Phaser.Scene {
     this.field.render(i, this.work.countFor(i));
   }
 
-  // 개발 실행(npm run dev)에서만: 하루 진행(4단계) 전까지 성장·수확 확인용
-  addDevDayButton() {
-    const x = this.cameras.main.width - 6 - MIN_TOUCH;
-    createButton(this, x, 6, {
-      label: '+1일',
-      onTap: () => {
-        this.farm.advanceDay();
-        this.farm.plots.forEach((_, i) => this.field.render(i, this.work.countFor(i)));
+  renderPlots() {
+    this.farm.plots.forEach((_, i) => this.field.render(i, this.work.countFor(i)));
+  }
+
+  // 🌙 잠자기: 한 번 묻고 나서 하루를 끝낸다. 묻는 동안 시계는 멈춘다
+  askSleep() {
+    if (this.sleeping) return;
+    this.sleeping = true;
+    showDialog(this, {
+      title: '오늘은 이만 잘까요?',
+      buttons: [
+        { label: '조금 더', onTap: () => (this.sleeping = false) },
+        { label: '잘래요', onTap: () => this.endDay() },
+      ],
+    });
+  }
+
+  // 하루 끝: 할 일 멈춤 → 작물 성장 → 어두워짐 → 정산 → [잘 자요] → 다음 날 아침
+  endDay() {
+    this.sleeping = true;
+    this.cat.stop();
+    this.work.clear();
+    this.farm.advanceDay();
+
+    const day = this.clock.day;
+    this.tweens.add({
+      targets: this.nightShade,
+      alpha: 0.75,
+      duration: 700,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.renderPlots();
+        showDialog(this, {
+          title: `${day}일째가 저물었어요`,
+          body: '오늘 하루도 수고했어요.',
+          buttons: [{ label: '잘 자요', onTap: () => this.startMorning() }],
+        });
       },
+    });
+  }
+
+  startMorning() {
+    this.clock.nextDay();
+    this.weather = rollWeather(config.weather);
+    if (this.weather === 'rain' && config.weather.rainAutoWater) this.farm.waterAll();
+    this.renderPlots();
+    this.topBar.update(this.clock.day, this.weather);
+
+    this.tweens.add({
+      targets: this.nightShade,
+      alpha: 0,
+      duration: 700,
+      ease: 'Sine.easeInOut',
+      onComplete: () => (this.sleeping = false),
     });
   }
 
   update(_time, delta) {
     this.cat.update(delta);
+    // 밤이 끝나면 자동으로 하루 끝 (묻지 않음)
+    if (!this.sleeping && this.clock.tick(delta / 1000)) this.endDay();
   }
 
   // 빈 땅(임시 도형): 체크무늬 잔디 + 맵 외곽 한 줄. 한 장의 텍스처로 구워 둔다.
