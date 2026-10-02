@@ -3,12 +3,13 @@ import { createButton, MIN_TOUCH, UI_DEPTH } from './button.js';
 import { drawWeather } from './weatherIcon.js';
 
 const MARGIN = 6;
+const GAP = 6;
 const CHIP_H = 24;
 
-// 상단바 한 줄: 왼쪽 날짜·날씨, 오른쪽 버튼들 (지금은 🌙 잠자기만.
-// 온기·🎒·📖·🔨 는 각 단계에서 이 줄에 추가한다)
+// 상단바 한 줄: 왼쪽 날짜·날씨, 오른쪽 버튼들 🎒 (📖 🔨) 🌙.
+// 온기·📖·🔨 는 각 단계에서 이 줄에 추가한다
 export default class TopBar {
-  constructor(scene, { onSleep }) {
+  constructor(scene, { onStorage, onSleep }) {
     this.g = scene.add.graphics().setScrollFactor(0).setDepth(UI_DEPTH);
     this.dayText = scene.add
       .text(0, 0, '', { fontFamily: 'sans-serif', fontSize: '12px', color: PALETTE.popStroke })
@@ -24,6 +25,17 @@ export default class TopBar {
         g.fillStyle(PALETTE.buttonFill).fillCircle(cx + 5, cy - 4, 8);
       },
       onTap: onSleep,
+    });
+
+    createButton(scene, cam.width - MARGIN - MIN_TOUCH * 2 - GAP, MARGIN, {
+      // 가방: 몸통 + 덮개 + 손잡이 + 잠금쇠
+      draw: (g, cx, cy) => {
+        g.lineStyle(2, PALETTE.bagDark).strokeRoundedRect(cx - 5, cy - 11, 10, 8, 3);
+        g.fillStyle(PALETTE.bag).fillRoundedRect(cx - 9, cy - 5, 18, 15, 4);
+        g.fillStyle(PALETTE.bagDark).fillRoundedRect(cx - 9, cy - 5, 18, 7, 3);
+        g.fillStyle(PALETTE.buttonFill).fillRect(cx - 2, cy, 4, 3);
+      },
+      onTap: onStorage,
     });
   }
 

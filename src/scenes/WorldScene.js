@@ -9,11 +9,13 @@ import Inventory from '../state/inventory.js';
 import DayClock from '../state/dayClock.js';
 import { rollWeather } from '../state/weather.js';
 import { unlockedCrops } from '../state/crops.js';
+import { itemOrder } from '../data/items.js';
 import Cat from '../objects/Cat.js';
 import FarmField from '../objects/FarmField.js';
 import { UI_DEPTH } from '../ui/button.js';
 import { showDialog } from '../ui/dialog.js';
 import TopBar from '../ui/topBar.js';
+import { showStoragePopup } from '../ui/storagePopup.js';
 import { createHomeButton } from '../ui/homeButton.js';
 import { showTapMarker } from '../ui/tapMarker.js';
 import { showHarvestPop } from '../ui/harvestPop.js';
@@ -46,8 +48,10 @@ export default class WorldScene extends Phaser.Scene {
     this.clock = new DayClock(config.time);
     this.weather = config.weather.firstDay;
     this.sleeping = false; // 하루가 끝나 정산 중이거나 잠자기 확인 중이면 시계가 멈춘다
+    this.storageOpen = false; // 창고를 보는 동안에도 시계가 멈춘다 (고양이는 하던 일 계속)
     this.farm = new Farm(config, config.game.startPlots);
     this.inventory = new Inventory();
+    this.itemOrder = itemOrder(config);
     this.field = new FarmField(this, this.grid, this.farm, config.farm);
 
     const { startTileX, startTileY, speedTilesPerSec, workSec } = config.character;
@@ -71,7 +75,10 @@ export default class WorldScene extends Phaser.Scene {
       createHomeButton(this, { homeX, homeY, panMs: config.camera.homePanMs });
     }
     this.seedBar = new SeedBar(this, unlockedCrops(config.crops));
-    this.topBar = new TopBar(this, { onSleep: () => this.askSleep() });
+    this.topBar = new TopBar(this, {
+      onStorage: () => this.openStorage(),
+      onSleep: () => this.askSleep(),
+    });
     this.topBar.update(this.clock.day, this.weather);
 
     // 하루가 끝날 때 화면을 덮는 밤빛 (대화창 바로 아래)
@@ -123,6 +130,15 @@ export default class WorldScene extends Phaser.Scene {
 
   renderPlots() {
     this.farm.plots.forEach((_, i) => this.field.render(i, this.work.countFor(i)));
+  }
+
+  openStorage() {
+    if (this.sleeping || this.storageOpen) return;
+    this.storageOpen = true;
+    showStoragePopup(this, {
+      entries: this.inventory.list(this.itemOrder),
+      onClose: () => (this.storageOpen = false),
+    });
   }
 
   // 🌙 잠자기: 한 번 묻고 나서 하루를 끝낸다. 묻는 동안 시계는 멈춘다
@@ -181,7 +197,8 @@ export default class WorldScene extends Phaser.Scene {
   update(_time, delta) {
     this.cat.update(delta);
     // 밤이 끝나면 자동으로 하루 끝 (묻지 않음)
-    if (!this.sleeping && this.clock.tick(delta / 1000)) this.endDay();
+    const paused = this.sleeping || this.storageOpen;
+    if (!paused && this.clock.tick(delta / 1000)) this.endDay();
   }
 
   // 빈 땅(임시 도형): 체크무늬 잔디 + 맵 외곽 한 줄. 한 장의 텍스처로 구워 둔다.

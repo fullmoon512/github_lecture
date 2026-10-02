@@ -25,6 +25,12 @@ export const PALETTE = {
   cloudLine: 0x9a93ab,
   rain: 0x7fb3e0,
   night: 0x2e2a4a,
+  slotFill: 0xf6e8cf,
+  slotLine: 0xd9c4a3,
+  itemFallback: 0xb9b2c4,
+  bag: 0xc98f5e,
+  bagDark: 0xa8714a,
+  mutedText: '#9a8676',
   popText: '#fff4e0',
   popStroke: '#6b5446',
   crop: {
