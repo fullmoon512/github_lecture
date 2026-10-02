@@ -21,6 +21,13 @@
     "homePanMs": 400
   },
 
+  "character": {
+    "_note": "초안. 시작 위치는 타일 좌표, 속도는 초당 타일 수",
+    "startTileX": 20,
+    "startTileY": 11,
+    "speedTilesPerSec": 4
+  },
+
   "time": {
     "_note": "초 단위. 합계 540초 = 9분. 시계는 연출 전용이며 성장과 무관",
     "dayLengthSec": 540,

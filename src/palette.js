@@ -8,4 +8,8 @@ export const PALETTE = {
   buttonLine: 0x8c6e5a,
   roof: 0xe39b8a,
   wall: 0xf2d6a8,
+  catBody: 0xf0be86,
+  catLine: 0x6b5446,
+  shadow: 0x2f3a2c,
+  tapMarker: 0x5f8a57,
 };
