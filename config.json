@@ -1,0 +1,136 @@
+{
+  "_readme": "모든 게임 수치는 이 파일에서만 관리한다. 코드에 숫자를 직접 쓰지 말 것. null 은 미정이므로 임의로 채우지 말고 물어볼 것. 아래 수치는 대부분 초안이다.",
+
+  "game": {
+    "width": 640,
+    "height": 360,
+    "tileSize": 16,
+    "startPlots": 4
+  },
+
+  "world": {
+    "_note": "초안. 집·텃밭·쉼터 배치 후 조정. homeX/Y 는 '처음 위치' 카메라 중심(px)",
+    "widthTiles": 80,
+    "heightTiles": 46,
+    "homeX": 320,
+    "homeY": 180
+  },
+
+  "camera": {
+    "dragThresholdPx": 8,
+    "homePanMs": 400
+  },
+
+  "time": {
+    "_note": "초 단위. 합계 540초 = 9분. 시계는 연출 전용이며 성장과 무관",
+    "dayLengthSec": 540,
+    "phases": { "morning": 120, "day": 240, "evening": 120, "night": 60 }
+  },
+
+  "weather": {
+    "sunny": 0.7,
+    "cloudy": 0.2,
+    "rain": 0.1,
+    "rainAutoWater": true
+  },
+
+  "crops": {
+    "carrot": { "growDays": 2, "unlock": "start" },
+    "herb":   { "growDays": 2, "unlock": "warmth", "unlockWarmth": 5 },
+    "tomato": { "growDays": 3, "unlock": "warmth", "unlockWarmth": 10 }
+  },
+
+  "seeds": { "free": true },
+
+  "growth": {
+    "needsWaterToGrow": true,
+    "witherWhenUnwatered": false
+  },
+
+  "foodCategories": ["raw", "juice", "tea", "jam"],
+
+  "cooking": {
+    "craftTimeSec": 3,
+    "recipes": {
+      "carrot_juice": { "category": "juice", "inputs": { "carrot": 2 } },
+      "tomato_juice": { "category": "juice", "inputs": { "tomato": 2 } },
+      "carrot_jam":   { "category": "jam",   "inputs": { "carrot": 3 } },
+      "tomato_jam":   { "category": "jam",   "inputs": { "tomato": 3 } },
+      "herb_tea":     { "category": "tea",   "inputs": { "herb": 2 } }
+    }
+  },
+
+  "visitors": {
+    "_note": "초안. 에셋 확인 후 조정. prefers 는 foodCategories 중 하나",
+    "maxPerDayStart": 2,
+    "baseVisitChance": 0.35,
+    "shelterBonus": 0.2,
+    "maxVisitChance": 0.9,
+    "stayTimeSec": { "min": 60, "max": 90 },
+    "preferredWeight": 3,
+    "otherWeight": 1,
+    "noFoodBehavior": "rest_only",
+    "types": [
+      { "id": "cow",         "prefers": "raw",   "gifts": ["milk", "clover"] },
+      { "id": "cow_alt",     "prefers": "tea",   "gifts": ["milk", "clover"] },
+      { "id": "chicken",     "prefers": "juice", "gifts": ["egg", "feather"] },
+      { "id": "chicken_alt", "prefers": "jam",   "gifts": ["egg", "feather"] }
+    ]
+  },
+
+  "feedSpots": {
+    "start": 1,
+    "levels": [
+      { "spots": 2, "cost": { "carrot": 8 } },
+      { "spots": 3, "cost": { "tomato": 8, "herb": 4 } }
+    ]
+  },
+
+  "warmth": {
+    "restOnly": 1,
+    "ateOther": 2,
+    "atePreferred": 3
+  },
+
+  "gifts": {
+    "items": ["egg", "milk", "feather", "clover"],
+    "chance": 0.3,
+    "preferredBonus": 0.2
+  },
+
+  "friendship": {
+    "levelThresholds": [3, 10, 20],
+    "levelRewards": ["note", "note", "codex_star"]
+  },
+
+  "shelters": {
+    "cushion":   { "cost": { "carrot": 4 } },
+    "waterBowl": { "cost": { "carrot": 6, "herb": 2 } },
+    "feeder":    { "cost": { "tomato": 4 } }
+  },
+
+  "upgrades": {
+    "farmExpand": [
+      { "plots": 6,  "warmth": 12 },
+      { "plots": 9,  "warmth": 28 },
+      { "plots": 12, "warmth": 50 }
+    ],
+    "waterCan": [
+      { "mode": "row", "cost": { "carrot": 10 } },
+      { "mode": "all", "cost": { "carrot": 10, "tomato": 10 } }
+    ],
+    "homeRemodel": {
+      "extraVisitorsPerLevel": 1,
+      "levels": [
+        { "warmth": 15, "cost": { "egg": 2 } },
+        { "warmth": 40, "cost": { "milk": 3, "feather": 2 } },
+        { "warmth": 80, "cost": { "clover": 5, "egg": 3 } }
+      ]
+    }
+  },
+
+  "notes": {
+    "total": 5,
+    "unlockConditions": ["first_harvest", "first_cook", "friendship_lv1", "friendship_lv2", "day_7"]
+  }
+}
